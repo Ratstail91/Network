@@ -40,15 +40,17 @@ void TCPSocket::Open(const char* ip, int port) {
 		throw(std::runtime_error("Failed to create a TCPSocket"));
 	}
 
+	bool connected = false;
 	for(addrinfo *it = ptr; it; it = it->ai_next) {
-		if (connect(sock, it->ai_addr, it->ai_addrlen) == SOCKET_ERROR) {
-			sock = INVALID_SOCKET;
+		if (!connect(sock, it->ai_addr, it->ai_addrlen)) {
+			connected = true;
+			break;
 		}
 	}
 
 	freeaddrinfo(ptr);
 
-	if (sock == INVALID_SOCKET) {
+	if (!connected) {
 		closesocket(sock);
 		sock = INVALID_SOCKET;
 		throw(std::runtime_error("Failed to connect a TCPSocket"));
