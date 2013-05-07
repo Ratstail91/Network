@@ -65,7 +65,7 @@ int TCPSocket::Send(const void* data, int len, int flags) {
 		throw(std::runtime_error("Failed to send, TCPSocket is invalid"));
 	}
 	int ret = send(sock, (const char*)data, len, flags);
-	if (ret <= 0) {
+	if (ret == SOCKET_ERROR) {
 		Close();
 		throw(std::runtime_error("Failed to send, unknown error, TCPSocket automatically closed"));
 	}
@@ -77,7 +77,7 @@ int TCPSocket::Recv(void* data, int maxlen, int flags) {
 		throw(std::runtime_error("Failed to receive, TCPSocket is invalid"));
 	}
 	int ret = recv(sock, (char*)data, maxlen, flags);
-	if (ret < 0) {
+	if (ret == SOCKET_ERROR) {
 		Close();
 		throw(std::runtime_error("Failed to receive, unknown error, TCPSocket automatically closed"));
 	}
