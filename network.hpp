@@ -1,14 +1,6 @@
 #ifndef NETWORK_HPP_
 #define NETWORK_HPP_
 
-/* Unless noted otherwise, functions return 0 on success, or a negative
- * value on error. There are NO blocking functions.
- * 
- * This is my idea for a minimalist networking interface. This is what I
- * /wish/ existed. I might try and make this work, but I'm inexperienced
- * with networking and making APIs.
-*/
-
 #include <cstdint>
 
 #define WIN32_LEAN_AND_MEAN
@@ -27,13 +19,8 @@ public:
 
 	/* param 1: ip address to connect to
 	 * param 2: port to open the server socket on
-	 * return:
-	 *     0: clean exit
-	 *     -1: getaddrinfo() failed (did you forget NetworkInit()?)
-	 *     -2: socket() failed
-	 *     -3: connect() failed
 	*/
-	int Open(const char* ip, int port);
+	void Open(const char* ip, int port);
 	void Close();
 
 	/* Send() and Receive()
@@ -41,9 +28,7 @@ public:
 	 * param 2: length/maxlength of the data
 	 * param 3: flags to the internal function
 	 * return:
-	 *     >0: the amount of data sent/received (not necessarily the same value as len/maxlen)
-	 *     0: the local and remote socket pair has been closed
-	 *     SOCKET_ERROR: unknown socket error
+	 *     the amount of data sent/received (not necessarily the same value as len/maxlen)
 	*/
 	int Send(const void* data, int len, int flags = 0);
 	int Recv(void* data, int maxlen, int flags = 0);
@@ -58,22 +43,9 @@ public:
 	TCPServerSocket(int port);
 	~TCPServerSocket();
 
-	/* param 1: port to open the server socket on
-	 * return:
-	 *     0: clean exit
-	 *     -1: getaddrinfo() failed (did you forget NetworkInit()?)
-	 *     -2: socket() failed
-	 *     -3: bind() failed
-	*/
-	int Open(int port);
+	void Open(int port);
 	void Close();
 
-	/* param 1: pointer to a socket to be created.
-	 * return:
-	 *     1: New connection, socket can be used normally
-	 *     0: No new connection, socket is not altered
-	 *     -1: Unknown error
-	*/
 	int Accept(TCPSocket*, int uSeconds = 0);
 private:
 	SOCKET sock;

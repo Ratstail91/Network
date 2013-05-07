@@ -1,5 +1,6 @@
 #include "network.hpp"
 
+#include <stdexcept>
 #include <cstdio>
 
 /* TCPSocket definition
@@ -17,7 +18,7 @@ TCPSocket::~TCPSocket() {
 	Close();
 }
 
-int TCPSocket::Open(const char* ip, int port) {
+void TCPSocket::Open(const char* ip, int port) {
 	addrinfo *ptr = nullptr, hints;
 	char buf[100];
 	sprintf(buf, "%d",port); //std compliant itoa()
@@ -29,14 +30,14 @@ int TCPSocket::Open(const char* ip, int port) {
 	hints.ai_protocol = IPPROTO_TCP;
 
 	if (getaddrinfo(ip, buf, &hints, &ptr)) {
-		return -1;
+		throw(std::runtime_error("TCPSocket failed to access address info"));
 	}
 
 	sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
 	if (sock == INVALID_SOCKET) {
 		freeaddrinfo(ptr);
-		return -2;
+		throw(std::runtime_error("Failed to create a TCPSocket"));
 	}
 
 	for(addrinfo *it = ptr; it; it = it->ai_next) {
@@ -50,9 +51,8 @@ int TCPSocket::Open(const char* ip, int port) {
 	if (sock == INVALID_SOCKET) {
 		closesocket(sock);
 		sock = INVALID_SOCKET;
-		return -3;
+		throw(std::runtime_error("Failed to connect a TCPSocket"));
 	}
-	return 0;
 }
 
 void TCPSocket::Close() {
@@ -60,25 +60,26 @@ void TCPSocket::Close() {
 	sock = INVALID_SOCKET;
 }
 
-//TODO: auto-close a disconnected server
 int TCPSocket::Send(const void* data, int len, int flags) {
 	if (sock == INVALID_SOCKET) {
-		return 0;
+		throw(std::runtime_error("Failed to send, TCPSocket is invalid"));
 	}
 	int ret = send(sock, (const char*)data, len, flags);
 	if (ret <= 0) {
 		Close();
+		throw(std::runtime_error("Failed to send, unknown error, TCPSocket automatically closed"));
 	}
 	return ret;
 }
 
 int TCPSocket::Recv(void* data, int maxlen, int flags) {
 	if (sock == INVALID_SOCKET) {
-		return 0;
+		throw(std::runtime_error("Failed to receive, TCPSocket is invalid"));
 	}
 	int ret = recv(sock, (char*)data, maxlen, flags);
-	if (ret <= 0) {
+	if (ret < 0) {
 		Close();
+		throw(std::runtime_error("Failed to receive, unknown error, TCPSocket automatically closed"));
 	}
 	return ret;
 }
@@ -98,7 +99,7 @@ TCPServerSocket::~TCPServerSocket() {
 	Close();
 }
 
-int TCPServerSocket::Open(int port) {
+void TCPServerSocket::Open(int port) {
 	addrinfo *ptr = nullptr, hints;
 	char buf[100];
 	sprintf(buf, "%d",port); //std compliant itoa()
@@ -110,25 +111,23 @@ int TCPServerSocket::Open(int port) {
 	hints.ai_flags = AI_PASSIVE;
 
 	if (getaddrinfo(nullptr, buf, &hints, &ptr)) {
-		return -1;
+		throw(std::runtime_error("TCPServerSocket failed to access address info"));
 	}
 
 	sock = socket(ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol);
 
 	if (sock == INVALID_SOCKET) {
 		freeaddrinfo(ptr);
-		return -2;
+		throw(std::runtime_error("Failed to create a TCPServerSocket"));
 	}
 
 	if (bind(sock, ptr->ai_addr, ptr->ai_addrlen) == SOCKET_ERROR) {
 		closesocket(sock);
 		freeaddrinfo(ptr);
-		return -3;
+		throw(std::runtime_error("Failed to bind TCPServerSocket"));
 	}
 
 	freeaddrinfo(ptr);
-
-	return 0;
 }
 
 void TCPServerSocket::Close() {
@@ -137,7 +136,7 @@ void TCPServerSocket::Close() {
 
 int TCPServerSocket::Accept(TCPSocket* s, int uSeconds) {
 	if (listen(sock, SOMAXCONN) == SOCKET_ERROR) {
-		return -1;
+		throw(std::runtime_error("TCPServerSocket: listen() error"));
 	}
 
 	//file descriptor sets are to prevent blocking
@@ -147,12 +146,14 @@ int TCPServerSocket::Accept(TCPSocket* s, int uSeconds) {
 	FD_ZERO(&readfds);
 	FD_SET(sock, &readfds);
 
-	select(0, &readfds, nullptr, nullptr, &tv);
+	if (select(0, &readfds, nullptr, nullptr, &tv) == SOCKET_ERROR) {
+		throw(std::runtime_error("TCPServerSocket: select() error"));
+	}
 
 	//I don't want this to block
 	if (FD_ISSET(sock, &readfds)) {
 		if ((s->sock = accept(sock, nullptr, nullptr)) == INVALID_SOCKET) {
-			return -1;
+			throw(std::runtime_error("TCPServerSocket: accept() error"));
 		}
 		return 1;
 	}
