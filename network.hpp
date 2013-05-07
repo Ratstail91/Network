@@ -50,25 +50,21 @@ public:
 private:
 	SOCKET sock;
 };
-/*
-class UDPPacket {
+
+class UDPRemote {
 public:
-	UDPPacket();
-	UDPPacket(int size);
-	~UDPPacket();
+	UDPRemote();
+	UDPRemote(const char* ip, int port);
 
-	int Alloc(int size);
-	int Resize(int size);
-	int Free();
-
-	int GetSize() const;
-	void* GetDataPtr() const;
-
-	int SetIPAddress(const char* host, int port);
-	//?
+	/* param 1: ip of the remote to connect to, null to clear
+	 * param 2: port of the remote to connect to
+	*/
+	void Set(const char* ip, int port);
+	//TODO: Get?
 private:
-	int size;
-	void* data;
+	uint32_t host;
+	uint16_t port;
+	friend class UDPSocket;
 };
 
 class UDPSocket {
@@ -80,12 +76,10 @@ public:
 	int Open(int port);
 	void Close();
 
-	int Send(UDPPacket*);
-	int Recv(UDPPacket*);
-
-	int GetPort() const;
+	int Send(const void* data, int len, UDPRemote* rem, int flags = 0);
+	int Recv(void* data, int maxlen, UDPRemote* rem, int flags = 0);
 private:
 	SOCKET sock;
 };
-*/
+
 #endif
