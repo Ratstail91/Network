@@ -51,35 +51,36 @@ private:
 	SOCKET sock;
 };
 
-class UDPRemote {
-public:
-	UDPRemote();
-	UDPRemote(const char* ip, int port);
-
-	/* param 1: ip of the remote to connect to, null to clear
-	 * param 2: port of the remote to connect to
-	*/
-	void Set(const char* ip, int port);
-	//TODO: Get?
-private:
-	uint32_t host;
-	uint16_t port;
-	friend class UDPSocket;
-};
-
-class UDPSocket {
-public:
-	UDPSocket();
-	UDPSocket(int port);
-	~UDPSocket();
-
-	int Open(int port);
-	void Close();
-
-	int Send(const void* data, int len, UDPRemote* rem, int flags = 0);
-	int Recv(void* data, int maxlen, UDPRemote* rem, int flags = 0);
-private:
-	SOCKET sock;
-};
+//TODO: Write the UDP systems
+//
+//class UDPRemote {
+//public:
+//	UDPRemote();
+//	UDPRemote(const char* ip, int port);
+//
+//	/* param 1: ip of the remote to connect to, null to clear
+//	 * param 2: port of the remote to connect to
+//	*/
+//	void Set(const char* ip, int port);
+//	//TODO: Get?
+//private:
+//	sockaddr addr;
+//	friend class UDPSocket;
+//};
+//
+//class UDPSocket {
+//public:
+//	UDPSocket();
+//	UDPSocket(int port);
+//	~UDPSocket();
+//
+//	int Open(int port);
+//	void Close();
+//
+//	int Send(const void* data, int len, UDPRemote* rem, int flags = 0);
+//	int Recv(void* data, int maxlen, UDPRemote* rem, int flags = 0);
+//private:
+//	SOCKET sock;
+//};
 
 #endif
